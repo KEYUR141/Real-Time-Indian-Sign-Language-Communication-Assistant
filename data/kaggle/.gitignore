@@ -1,0 +1,6 @@
+# Ignore downloaded dataset contents.
+*
+
+# Keep documentation and this ignore rule tracked.
+!.gitignore
+!README.md

@@ -1,0 +1,10 @@
+env/
+.env
+
+# Downloaded datasets
+data/kaggle/indian-sign-language-isl/
+data/mendeley/islvt/original/
+data/mendeley/islvt/extracted/
+
+# Generated dataset features
+data/processed/
