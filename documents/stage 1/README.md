@@ -27,5 +27,4 @@ Stage 1 establishes what the project will build, whom it is intended to support,
 
 ## Review Method
 
-The AI lead should walk the team through each document. Unresolved decisions should be recorded in the checklist. Stage 1 is complete only when the project supervisor and team agree that the first release is an isolated-sign recognition prototype rather than unrestricted ISL translation.
-
+The AI lead should walk the team through each document. Unresolved decisions should be recorded in the checklist. Stage 1 is complete only when the project supervisor and team agree that the first release is an isolated-sign recognition prototype rather than unrestricted ISL translation. Stage 2 then begins implementation of the data-collection application and its three-sign pilot setup.

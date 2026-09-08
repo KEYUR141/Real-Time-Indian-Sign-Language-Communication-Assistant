@@ -60,7 +60,7 @@ Record decisions here during the team review:
 | Confirm accepted sign variants | ISL reviewer | TBD | Open |
 | Confirm participant availability | Team coordinator | TBD | Open |
 | Confirm demonstration laptop and webcam | Development lead | TBD | Open |
-| Select model framework for sequence training | AI lead | Before Stage 8 | Deferred |
+| Select model framework for sequence training | AI lead | Before Stage 7 | Deferred |
 
 ## 8. Stage Approval
 
@@ -72,4 +72,3 @@ Stage 1 is complete when all blocking checklist items are resolved.
 | AI lead |  |  |  |
 | Team representative |  |  |  |
 | ISL reviewer, if available |  |  |  |
-

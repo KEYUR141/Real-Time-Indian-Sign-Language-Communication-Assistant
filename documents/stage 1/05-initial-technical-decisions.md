@@ -119,9 +119,8 @@ Required guardrails:
 | Landmarks | MediaPipe Tasks |
 | Data arrays | NumPy and Pandas |
 | Baseline ML | scikit-learn |
-| Sequence model | PyTorch or TensorFlow, to be finalized before Stage 8 |
+| Sequence model | PyTorch or TensorFlow, to be finalized before Stage 7 |
 | Backend | FastAPI |
 | Live communication | WebSocket |
-| Frontend | Simple web interface, framework selected during Stage 10 |
+| Frontend | Simple web interface, framework selected during Stage 9 |
 | Speech | Browser SpeechSynthesis where supported |
-

@@ -50,26 +50,29 @@ ISL user
 
 **Exit criteria:** The scope, requirements, vocabulary-selection rules, data strategy, risks, and first architectural decisions are documented and approved by the team.
 
-### Stage 2: Initial Vocabulary Selection
+### Stage 2: Data-Collection Application and Pilot Setup
 
-**Estimated duration:** 2 to 3 working days
+**Estimated duration:** 1 to 2 weeks
 
-**Purpose:** Select a small and verifiable set of signs for the first prototype.
+**Purpose:** Start implementation early by building a reliable application for recording labelled ISL videos and their metadata.
 
 **Activities:**
 
-- Select three visually distinct signs for the pilot.
-- Verify sign meaning and execution using ISLRTC or an ISL expert.
-- Define label names, variants, start position, end position, and recording instructions.
-- Avoid signs that cannot be distinguished using the planned features.
+- Select and verify three visually distinct ISL signs for the pilot.
+- Define label names, accepted variants, start position, end position, and recording instructions.
+- Create participant, consent, vocabulary, and recording-session records.
+- Add sign selection, countdown, recording, preview, accept, reject, and re-record controls.
+- Save raw video and metadata using a consistent directory and filename scheme.
+- Validate labels, participant codes, video duration, and required metadata.
+- Keep landmark extraction optional until the MediaPipe prototype is validated in Stage 3.
 
-**Exit criteria:** A reviewed three-sign vocabulary specification is available.
+**Exit criteria:** The application can complete a controlled three-sign recording session and preserve accepted raw videos with valid metadata.
 
-### Stage 3: MediaPipe Learning Prototype
+### Stage 3: MediaPipe Learning and Integration Prototype
 
 **Estimated duration:** 4 to 7 working days
 
-**Purpose:** Understand webcam capture and landmark extraction before designing the dataset.
+**Purpose:** Validate landmark extraction and integrate it with recordings before beginning pilot data collection.
 
 **Activities:**
 
@@ -78,26 +81,12 @@ ISL user
 - Detect selected upper-body points with Pose Landmarker.
 - Display landmark connections and coordinate values.
 - Test missing-hand handling, handedness, frame timestamps, and processing speed.
+- Run landmark extraction on videos produced by the Stage 2 application.
+- Decide whether landmarks are saved during recording, extracted offline, or both.
 
-**Exit criteria:** A local webcam program displays stable hand and pose landmarks and records basic performance measurements.
+**Exit criteria:** MediaPipe produces stable hand and pose landmarks from both the live webcam and videos saved by the collection application.
 
-### Stage 4: Data-Collection Application
-
-**Estimated duration:** 5 to 8 working days
-
-**Purpose:** Produce consistent, labelled, traceable recordings.
-
-**Activities:**
-
-- Create participant and recording-session forms.
-- Add sign selection, countdown, recording, preview, accept, and reject controls.
-- Save raw video, landmarks, and metadata.
-- Validate filenames, labels, durations, and missing landmarks.
-- Keep a collection log and consent record.
-
-**Exit criteria:** The application can collect and validate a complete recording session.
-
-### Stage 5: Pilot Dataset
+### Stage 4: Pilot Dataset
 
 **Estimated duration:** 3 to 5 working days
 
@@ -112,7 +101,7 @@ ISL user
 
 **Exit criteria:** A reviewed, versioned pilot dataset is ready for preprocessing.
 
-### Stage 6: Preprocessing Pipeline
+### Stage 5: Preprocessing Pipeline
 
 **Estimated duration:** 4 to 7 working days
 
@@ -129,7 +118,7 @@ ISL user
 
 **Exit criteria:** A reproducible command converts a dataset version into train, validation, and test features.
 
-### Stage 7: Baseline Model
+### Stage 6: Baseline Model
 
 **Estimated duration:** 4 to 7 working days
 
@@ -145,7 +134,7 @@ ISL user
 
 **Exit criteria:** A reproducible baseline and evaluation report are available.
 
-### Stage 8: Dynamic Sign Model
+### Stage 7: Dynamic Sign Model
 
 **Estimated duration:** 1 to 2 weeks
 
@@ -161,7 +150,7 @@ ISL user
 
 **Exit criteria:** The selected sequence model outperforms or meaningfully complements the baseline.
 
-### Stage 9: Real-Time Inference
+### Stage 8: Real-Time Inference
 
 **Estimated duration:** 5 to 8 working days
 
@@ -178,7 +167,7 @@ ISL user
 
 **Exit criteria:** The prototype recognizes selected signs live without uncontrolled repeated output.
 
-### Stage 10: Frontend and Backend Integration
+### Stage 9: Frontend and Backend Integration
 
 **Estimated duration:** 1 to 2 weeks
 
@@ -195,7 +184,7 @@ ISL user
 
 **Exit criteria:** A user can complete a live recognition session through the interface.
 
-### Stage 11: Expanded Dataset, Testing, and Demonstration
+### Stage 10: Expanded Dataset, Testing, and Demonstration
 
 **Estimated duration:** 2 to 4 weeks
 
@@ -217,18 +206,17 @@ ISL user
 | Stage | Estimated duration | Dependency |
 |---|---:|---|
 | 1. Domain and requirements | 3 to 5 days | None |
-| 2. Vocabulary selection | 2 to 3 days | Stage 1 |
-| 3. MediaPipe prototype | 4 to 7 days | Stage 1 |
-| 4. Collection application | 5 to 8 days | Stages 2 and 3 |
-| 5. Pilot dataset | 3 to 5 days | Stage 4 |
-| 6. Preprocessing | 4 to 7 days | Stage 5 |
-| 7. Baseline model | 4 to 7 days | Stage 6 |
-| 8. Dynamic model | 1 to 2 weeks | Stage 7 |
-| 9. Real-time inference | 5 to 8 days | Stage 8 |
-| 10. Application integration | 1 to 2 weeks | Stage 9 |
-| 11. Expansion and testing | 2 to 4 weeks | Stage 10 |
+| 2. Collection application and pilot setup | 1 to 2 weeks | Stage 1 |
+| 3. MediaPipe prototype and integration | 4 to 7 days | Stage 1; may overlap Stage 2 |
+| 4. Pilot dataset | 3 to 5 days | Stages 2 and 3 |
+| 5. Preprocessing | 4 to 7 days | Stage 4 |
+| 6. Baseline model | 4 to 7 days | Stage 5 |
+| 7. Dynamic model | 1 to 2 weeks | Stage 6 |
+| 8. Real-time inference | 5 to 8 days | Stage 7 |
+| 9. Application integration | 1 to 2 weeks | Stage 8 |
+| 10. Expansion and testing | 2 to 4 weeks | Stage 9 |
 
-Stages 2 and 3 can partly overlap. The complete project is likely to require approximately 10 to 16 weeks for a small college team, depending on participant availability, vocabulary size, and model performance.
+Stages 2 and 3 should overlap where possible. The collection interface and raw-video storage can be developed while MediaPipe is being learned. Pilot collection starts only after both stages pass their exit criteria. The complete project is likely to require approximately 10 to 16 weeks for a small college team, depending on participant availability, vocabulary size, and model performance.
 
 ## 6. Current Status
 
@@ -236,7 +224,7 @@ Stages 2 and 3 can partly overlap. The complete project is likely to require app
 - [x] Initial architecture planned
 - [x] Presentation content prepared
 - [ ] Stage 1 reviewed and approved
-- [ ] Three-sign vocabulary selected
+- [ ] Stage 2 collection application and three-sign setup completed
 - [ ] MediaPipe prototype implemented
 - [ ] Pilot data collected
 - [ ] Baseline model evaluated
