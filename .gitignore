@@ -1,6 +1,11 @@
 env/
 .env
 
+data/
+
+.codex
+__pycache__/
+
 # Downloaded datasets
 data/kaggle/indian-sign-language-isl/
 data/mendeley/islvt/original/
