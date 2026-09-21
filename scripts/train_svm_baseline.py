@@ -92,7 +92,10 @@ def main() -> int:
     experiment_root.mkdir(parents=True, exist_ok=True)
 
     expected = load_expected_features(
-        config.dataset.manifest_root, config.dataset.label_map_path, subset
+        config.dataset.manifest_root,
+        config.dataset.label_map_path,
+        subset,
+        excluded_labels=config.dataset.excluded_labels,
     )
     train_x, train_y, train_items = load_summary_matrix(
         output_root, expected, DatasetSplit.TRAIN

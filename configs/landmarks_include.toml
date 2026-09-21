@@ -1,0 +1,20 @@
+[dataset]
+root = "E:\\Hugging_Face\\INCLUDE"
+subset = "include"
+raw_directory = "raw/include"
+manifest_directory = "manifests/train_test_paths"
+label_map = "manifests/label_maps/label_map_include.json"
+excluded_labels = ["Second (Number)"]
+
+[landmarks]
+sequence_length = 64
+extract_hands = true
+extract_pose = true
+extract_face = false
+maximum_hands = 2
+minimum_detection_confidence = 0.5
+minimum_tracking_confidence = 0.5
+
+[output]
+root = "E:\\Hugging_Face\\INCLUDE\\processed\\mediapipe_v1"
+overwrite = false

@@ -314,7 +314,10 @@ def main() -> int:
     experiment_root.mkdir(parents=True, exist_ok=True)
     device = resolve_device(args.device)
     expected = load_expected_features(
-        config.dataset.manifest_root, config.dataset.label_map_path, subset
+        config.dataset.manifest_root,
+        config.dataset.label_map_path,
+        subset,
+        excluded_labels=config.dataset.excluded_labels,
     )
     train_raw, train_y, train_lengths, train_items = load_temporal_arrays(
         output_root, expected, DatasetSplit.TRAIN

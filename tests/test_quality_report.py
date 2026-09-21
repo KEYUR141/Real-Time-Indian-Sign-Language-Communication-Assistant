@@ -70,3 +70,17 @@ def test_quality_report_separates_manifest_and_unexpected_files(tmp_path: Path) 
     assert report["missing_manifest_features"] == 0
     assert report["unexpected_features"] == 1
     assert report["quality"]["samples_without_hands"] == 0
+
+
+def test_inspection_uses_manifest_label_id_for_reusable_landmarks(tmp_path: Path) -> None:
+    feature = expected_feature()
+    path = tmp_path / "sample.npz"
+    write_feature(path, feature)
+    with np.load(path, allow_pickle=False) as archive:
+        values = {key: archive[key] for key in archive.files}
+    values["label_id"] = np.asarray(99, dtype=np.int64)
+    np.savez_compressed(path, **values)
+
+    result = inspect_feature(path, feature, sequence_length=4)
+
+    assert result["label_id"] == feature.label_id

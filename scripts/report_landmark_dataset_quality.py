@@ -52,6 +52,7 @@ def main() -> int:
         label_map_path=config.dataset.label_map_path,
         subset=subset,
         splits=splits,
+        excluded_labels=config.dataset.excluded_labels,
     )
     report = build_quality_report(
         output_root=config.output.root,
@@ -60,6 +61,7 @@ def main() -> int:
     )
     report["subset"] = subset
     report["splits"] = [split.value for split in splits]
+    report["excluded_labels"] = list(config.dataset.excluded_labels)
     report_path = config.output.root.expanduser().resolve() / args.report_name
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 

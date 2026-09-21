@@ -15,6 +15,7 @@ class DatasetConfig:
     raw_directory: Path
     manifest_directory: Path
     label_map: Path
+    excluded_labels: tuple[str, ...] = ()
 
     @property
     def raw_root(self) -> Path:
@@ -79,6 +80,9 @@ def load_config(path: str | Path) -> ApplicationConfig:
             _required(dataset_values, "manifest_directory", "dataset")
         ),
         label_map=Path(_required(dataset_values, "label_map", "dataset")),
+        excluded_labels=tuple(
+            str(label) for label in dataset_values.get("excluded_labels", ())
+        ),
     )
     landmarks = LandmarkConfig(
         sequence_length=int(_required(landmark_values, "sequence_length", "landmarks")),
@@ -110,4 +114,3 @@ def load_config(path: str | Path) -> ApplicationConfig:
             raise ValueError(f"landmarks.{field_name} must be between 0 and 1")
 
     return ApplicationConfig(dataset=dataset, landmarks=landmarks, output=output)
-
