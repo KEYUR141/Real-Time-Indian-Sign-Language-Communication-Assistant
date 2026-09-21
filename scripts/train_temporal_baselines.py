@@ -1,4 +1,4 @@
-"""Train compact GRU and LSTM landmark-sequence baselines."""
+"""Train compact GRU, LSTM, and Transformer landmark-sequence baselines."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         nargs="+",
-        choices=("gru", "lstm"),
+        choices=("gru", "lstm", "transformer"),
         default=("gru", "lstm"),
     )
     parser.add_argument("--epochs", type=int, default=80)
@@ -49,6 +49,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--hidden-size", type=int, default=128)
     parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument("--transformer-heads", type=int, default=4)
+    parser.add_argument("--transformer-layers", type=int, default=2)
+    parser.add_argument("--transformer-feedforward-size", type=int, default=256)
     parser.add_argument("--learning-rate", type=float, default=0.001)
     parser.add_argument("--weight-decay", type=float, default=0.0001)
     parser.add_argument("--seed", type=int, default=42)
@@ -160,6 +163,10 @@ def train_one(
         hidden_size=args.hidden_size,
         number_of_classes=number_of_classes,
         dropout=args.dropout,
+        maximum_sequence_length=train_sequences.shape[1],
+        transformer_heads=args.transformer_heads,
+        transformer_layers=args.transformer_layers,
+        transformer_feedforward_size=args.transformer_feedforward_size,
     ).to(device)
     train_loader = make_loader(
         train_sequences, train_labels, train_lengths, args.batch_size, shuffle=True
@@ -249,6 +256,10 @@ def fit_fixed_epochs(
         hidden_size=args.hidden_size,
         number_of_classes=number_of_classes,
         dropout=args.dropout,
+        maximum_sequence_length=sequences.shape[1],
+        transformer_heads=args.transformer_heads,
+        transformer_layers=args.transformer_layers,
+        transformer_feedforward_size=args.transformer_feedforward_size,
     ).to(device)
     loader = make_loader(sequences, labels, lengths, args.batch_size, shuffle=True)
     counts = np.bincount(labels, minlength=number_of_classes).astype(np.float32)
@@ -283,13 +294,22 @@ def main() -> int:
     args = parse_args()
     if args.epochs <= 0 or args.patience <= 0 or args.batch_size <= 0:
         raise ValueError("epochs, patience, and batch size must be positive")
+    if args.transformer_heads <= 0 or args.transformer_layers <= 0:
+        raise ValueError("Transformer heads and layers must be positive")
+    if args.transformer_feedforward_size <= 0:
+        raise ValueError("Transformer feed-forward size must be positive")
     config = load_config(args.config)
     subset = args.subset or config.dataset.subset
     output_root = config.output.root.expanduser().resolve()
+    default_experiment_name = (
+        "transformer_baseline"
+        if tuple(args.models) == ("transformer",)
+        else "temporal_baselines"
+    )
     experiment_root = (
         args.output.expanduser().resolve()
         if args.output
-        else output_root / "models" / "temporal_baselines"
+        else output_root / "models" / default_experiment_name
     )
     experiment_root.mkdir(parents=True, exist_ok=True)
     device = resolve_device(args.device)
@@ -332,6 +352,10 @@ def main() -> int:
                 "hidden_size": args.hidden_size,
                 "number_of_classes": number_of_classes,
                 "dropout": args.dropout,
+                "maximum_sequence_length": int(train_x.shape[1]),
+                "transformer_heads": args.transformer_heads,
+                "transformer_layers": args.transformer_layers,
+                "transformer_feedforward_size": args.transformer_feedforward_size,
                 "state_dict": model.state_dict(),
                 "normalization_mean": mean,
                 "normalization_standard_deviation": standard_deviation,
@@ -355,6 +379,16 @@ def main() -> int:
         "test_samples": 0,
         "selection_metric": "validation_macro_f1",
         "selected_architecture": best["architecture"],
+        "configuration": {
+            "hidden_size": args.hidden_size,
+            "dropout": args.dropout,
+            "transformer_heads": args.transformer_heads,
+            "transformer_layers": args.transformer_layers,
+            "transformer_feedforward_size": args.transformer_feedforward_size,
+            "learning_rate": args.learning_rate,
+            "weight_decay": args.weight_decay,
+            "seed": args.seed,
+        },
         "candidates": results,
         "test": None,
     }
@@ -401,6 +435,10 @@ def main() -> int:
                 "hidden_size": args.hidden_size,
                 "number_of_classes": number_of_classes,
                 "dropout": args.dropout,
+                "maximum_sequence_length": int(train_x.shape[1]),
+                "transformer_heads": args.transformer_heads,
+                "transformer_layers": args.transformer_layers,
+                "transformer_feedforward_size": args.transformer_feedforward_size,
                 "state_dict": final_model.state_dict(),
                 "normalization_mean": final_mean,
                 "normalization_standard_deviation": final_standard_deviation,
@@ -409,7 +447,12 @@ def main() -> int:
             experiment_root / "selected_final.pt",
         )
 
-    (experiment_root / "temporal_baseline_report.json").write_text(
+    report_name = (
+        "transformer_baseline_report.json"
+        if tuple(args.models) == ("transformer",)
+        else "temporal_baseline_report.json"
+    )
+    (experiment_root / report_name).write_text(
         json.dumps(report, indent=2),
         encoding="utf-8",
     )
