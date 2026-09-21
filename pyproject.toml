@@ -8,6 +8,8 @@ dependencies = [
     "mediapipe==1.0.1",
     "numpy>=2.0,<3",
     "opencv-contrib-python>=4.10,<5",
+    "scikit-learn>=1.6,<2",
+    "torch>=2.5,<3",
     "tqdm>=4.66,<5",
 ]
 
@@ -19,6 +21,14 @@ dev = [
 
 [tool.uv]
 package = false
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
