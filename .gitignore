@@ -13,3 +13,6 @@ data/mendeley/islvt/extracted/
 
 # Generated dataset features
 data/processed/
+
+# Generated social-media artwork
+output/linkedin/
