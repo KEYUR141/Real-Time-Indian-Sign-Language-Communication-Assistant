@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Presentation frontend for the Real-Time Indian Sign Language Communication Assistant"
+    />
+    <title>ISL Communication Assistant</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div hidden>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="ISL Assistant home">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span>
+            <strong>ISL Assistant</strong>
+            <small>Indian Sign Language Recognition</small>
+          </span>
+        </a>
+
+        <div class="system-badges" aria-label="System status">
+          <span class="badge"><i class="dot dot-green"></i>Model ready</span>
+          <span class="badge"><i class="dot dot-blue"></i>CUDA</span>
+          <span class="badge badge-muted">262 signs</span>
+        </div>
+      </header>
+
+      <section class="intro">
+        <div>
+          <p class="eyebrow">REAL-TIME RECOGNITION PROTOTYPE</p>
+          <h1>Sign naturally.<br /><span>Communicate clearly.</span></h1>
+          <p class="intro-copy">
+            Capture one isolated Indian Sign Language sign and convert it into readable text
+            using MediaPipe landmarks and a compact Transformer.
+          </p>
+        </div>
+
+        <div class="benchmark" aria-label="Benchmark result">
+          <div class="benchmark-number">94.47<span>%</span></div>
+          <div>
+            <strong>Test Macro F1</strong>
+            <p>Full INCLUDE benchmark · 262 classes</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <article class="camera-panel panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">SIGN CAPTURE</p>
+              <h2>Camera input</h2>
+            </div>
+            <div class="live-state" id="cameraState">
+              <span class="dot"></span>
+              Camera off
+            </div>
+          </div>
+
+          <div class="viewport" id="viewport">
+            <video id="cameraVideo" autoplay muted playsinline></video>
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <div class="hand-symbol" aria-hidden="true">
+                <span class="finger f1"></span>
+                <span class="finger f2"></span>
+                <span class="finger f3"></span>
+                <span class="finger f4"></span>
+                <span class="palm"></span>
+                <span class="thumb"></span>
+              </div>
+              <strong>Camera preview</strong>
+              <p>Keep your upper body and both hands visible.</p>
+            </div>
+
+            <div class="capture-frame" aria-hidden="true">
+              <span class="corner top-left"></span>
+              <span class="corner top-right"></span>
+              <span class="corner bottom-left"></span>
+              <span class="corner bottom-right"></span>
+            </div>
+
+            <div class="recording-pill" id="recordingPill">
+              <span></span> Capturing sign
+            </div>
+
+            <div class="coverage-overlay">
+              <div><span>Hands</span><strong id="handCoverage">--</strong></div>
+              <div><span>Pose</span><strong id="poseCoverage">--</strong></div>
+              <div><span>Frames</span><strong id="frameCount">0</strong></div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button class="button button-secondary" id="cameraButton" type="button">
+              <span class="button-icon">◎</span>
+              Start camera
+            </button>
+            <button class="button button-primary" id="captureButton" type="button" disabled>
+              <span class="button-icon">●</span>
+              Start capture
+            </button>
+            <label class="button button-ghost" for="videoUpload">
+              <span class="button-icon">↑</span>
+              Upload video
+            </label>
+            <input id="videoUpload" type="file" accept="video/*" hidden />
+          </div>
+
+          <p class="keyboard-hint"><kbd>Space</kbd> start / stop capture <span>·</span> <kbd>R</kbd> reset</p>
+        </article>
+
+        <aside class="results-column">
+          <article class="result-card panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-label">RECOGNITION</p>
+                <h2>Current result</h2>
+              </div>
+              <span class="mode-label" id="modeLabel">Presentation sample</span>
+            </div>
+
+            <div class="empty-result" id="emptyResult">
+              <div class="pulse-ring"><span></span></div>
+              <strong>Waiting for a sign</strong>
+              <p>Start the camera, capture one complete sign, then stop to classify.</p>
+            </div>
+
+            <div class="prediction-result" id="predictionResult" hidden>
+              <div class="primary-prediction">
+                <div>
+                  <p>Recognized sign</p>
+                  <h3 id="recognizedSign">hat</h3>
+                </div>
+                <div class="confidence-ring" id="confidenceRing">
+                  <strong id="confidenceValue">100%</strong>
+                  <span>confidence</span>
+                </div>
+              </div>
+
+              <div class="acceptance accepted" id="acceptanceState">
+                <span>✓</span>
+                Accepted prediction
+              </div>
+
+              <div class="ranked-list" id="rankedList" aria-label="Top predictions"></div>
+            </div>
+          </article>
+
+          <article class="pipeline-card panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-label">PIPELINE</p>
+                <h2>Processing status</h2>
+              </div>
+              <span class="latency" id="latency">-- ms</span>
+            </div>
+
+            <ol class="pipeline-list">
+              <li data-stage="capture"><span>1</span><div><strong>Video capture</strong><small>Waiting for input</small></div></li>
+              <li data-stage="landmarks"><span>2</span><div><strong>MediaPipe landmarks</strong><small>Hands and upper-body pose</small></div></li>
+              <li data-stage="sequence"><span>3</span><div><strong>Temporal sequence</strong><small>64 × 255 features</small></div></li>
+              <li data-stage="transformer"><span>4</span><div><strong>Compact Transformer</strong><small>262 class probabilities</small></div></li>
+              <li data-stage="decision"><span>5</span><div><strong>Safe decision</strong><small>Confidence and unknown rejection</small></div></li>
+            </ol>
+          </article>
+        </aside>
+      </section>
+
+      <section class="transcript panel">
+        <div class="transcript-copy">
+          <p class="section-label">RECOGNIZED TEXT</p>
+          <div id="transcriptText" class="transcript-text" aria-live="polite">
+            <span>Accepted signs will appear here.</span>
+          </div>
+        </div>
+        <div class="transcript-actions">
+          <button class="icon-button" id="speakButton" type="button" title="Speak text" aria-label="Speak recognized text">◖</button>
+          <button class="icon-button" id="copyButton" type="button" title="Copy text" aria-label="Copy recognized text">□</button>
+          <button class="text-button" id="clearButton" type="button">Clear</button>
+        </div>
+      </section>
+
+      <footer>
+        <p>Compact Transformer · MediaPipe Hands + Pose · Isolated sign recognition</p>
+        <p>Presentation prototype</p>
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+.landmark-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transform: scaleX(-1);
+}
+
+.points-state {
+  position: absolute;
+  z-index: 3;
+  top: 35px;
+  left: 38px;
+  padding: 7px 10px;
+  border: 1px solid #50613d;
+  background: rgba(7, 8, 8, 0.76);
+  color: var(--acid);
+  font: 9px "DM Mono", monospace;
+  letter-spacing: 0.12em;
+}
+
+.points-state.loading {
+  border-color: #626965;
+  color: #e3e7e4;
+}
+
+.points-state.error {
+  border-color: #743d35;
+  color: #ff9e8b;
+}
+
+.controls {
+  grid-template-columns: 1fr 1.25fr 1fr 1fr;
+}
+
+.button.points.enabled {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: inset 0 0 18px rgba(117, 231, 219, 0.06);
+}
+
+.capture-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 8, 8, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.capture-countdown span,
+.capture-countdown small {
+  color: #b4bdb7;
+  font: 10px "DM Mono", monospace;
+  letter-spacing: 0.14em;
+}
+
+.capture-countdown strong {
+  margin: 8px 0;
+  color: var(--acid);
+  font: 500 clamp(72px, 10vw, 130px) "DM Mono", monospace;
+  line-height: 1;
+  text-shadow: 0 0 38px rgba(200, 255, 72, 0.32);
+}
+
+@media (max-width: 1050px) {
+  .controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+}

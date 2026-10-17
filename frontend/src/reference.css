@@ -1,0 +1,131 @@
+.reference-panel {
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.reference-layout {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.8fr) minmax(0, 1.35fr);
+}
+
+.reference-copy {
+  padding: clamp(30px, 4vw, 56px);
+  border-right: 1px solid var(--line);
+}
+
+.reference-copy h2 {
+  max-width: 490px;
+  margin: 0 0 18px;
+  font-size: clamp(30px, 3.5vw, 50px);
+  font-weight: 400;
+  line-height: 1.03;
+  letter-spacing: -0.05em;
+}
+
+.reference-copy > p:not(.kicker, .reference-source) {
+  max-width: 520px;
+  color: #8b958f;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.sign-select {
+  display: grid;
+  gap: 8px;
+  margin-top: 31px;
+}
+
+.sign-select span {
+  color: #78817c;
+  font: 9px "DM Mono", monospace;
+  letter-spacing: 0.12em;
+}
+
+.sign-select select {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #343b37;
+  border-radius: 0;
+  outline: none;
+  background: #111412;
+  color: #e2e8e4;
+  font: 12px "DM Mono", monospace;
+  text-transform: capitalize;
+}
+
+.sign-select select:focus { border-color: var(--acid); }
+
+.reference-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.reference-source {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 26px 0 0;
+  color: #aab2ad;
+  font: 9px "DM Mono", monospace;
+  line-height: 1.5;
+}
+
+.reference-source span { color: var(--acid); }
+.reference-source small { grid-column: 2; color: #68716c; }
+
+.reference-video {
+  position: relative;
+  min-height: 420px;
+  overflow: hidden;
+  background: #050606;
+}
+
+.reference-video video {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  max-height: 560px;
+  object-fit: contain;
+  background: #050606;
+}
+
+.reference-tag {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 13px;
+  border: 1px solid #47503e;
+  background: rgba(7, 8, 8, 0.82);
+  backdrop-filter: blur(9px);
+  font: 9px "DM Mono", monospace;
+}
+
+.reference-tag span { color: #7f8983; }
+.reference-tag strong { color: var(--acid); font-weight: 500; text-transform: uppercase; }
+
+.reference-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  color: #dce2de;
+}
+
+.reference-empty p { color: #7d8680; font-size: 12px; }
+
+@media (max-width: 900px) {
+  .reference-layout { grid-template-columns: 1fr; }
+  .reference-copy { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+@media (max-width: 600px) {
+  .reference-actions { grid-template-columns: 1fr; }
+  .reference-video, .reference-video video { min-height: 300px; }
+}

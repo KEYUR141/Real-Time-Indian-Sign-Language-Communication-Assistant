@@ -1,0 +1,214 @@
+.system-flow {
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.flow-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  padding: clamp(36px, 5vw, 68px) clamp(24px, 5vw, 70px) 38px;
+}
+
+.flow-intro h2 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(31px, 4vw, 58px);
+  font-weight: 400;
+  line-height: 1.03;
+  letter-spacing: -0.05em;
+}
+
+.flow-intro > p {
+  max-width: 330px;
+  margin: 0;
+  color: #919a94;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.simple-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  padding: 0 clamp(18px, 3vw, 42px) 42px;
+}
+
+.flow-step {
+  position: relative;
+  min-height: 290px;
+  padding: 25px 21px;
+  border: 1px solid var(--line);
+  background: rgba(9, 11, 10, 0.72);
+}
+
+.flow-step.featured {
+  border-color: #556533;
+  background: linear-gradient(145deg, rgba(200, 255, 72, 0.09), transparent 70%);
+}
+
+.flow-step.result-step {
+  background: linear-gradient(145deg, rgba(117, 231, 219, 0.08), transparent 70%);
+}
+
+.step-number {
+  color: #68716c;
+  font: 9px "DM Mono", monospace;
+}
+
+.step-icon {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  margin: 31px 0 25px;
+  border: 1px solid #3b443f;
+}
+
+.camera-icon::before {
+  content: "";
+  position: absolute;
+  inset: 17px 13px;
+  border: 1px solid var(--acid);
+}
+
+.camera-icon i {
+  position: absolute;
+  top: 23px;
+  left: 25px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--acid);
+  border-radius: 50%;
+}
+
+.nodes-icon i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--acid);
+  box-shadow: 0 0 10px rgba(200, 255, 72, 0.55);
+}
+
+.nodes-icon i:nth-child(1) { top: 11px; left: 26px; }
+.nodes-icon i:nth-child(2) { top: 25px; left: 12px; }
+.nodes-icon i:nth-child(3) { top: 25px; right: 12px; }
+.nodes-icon i:nth-child(4) { bottom: 10px; left: 18px; }
+.nodes-icon i:nth-child(5) { right: 18px; bottom: 10px; }
+
+.nodes-icon::before,
+.nodes-icon::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  left: 14px;
+  width: 29px;
+  height: 1px;
+  background: #788467;
+  transform: rotate(29deg);
+}
+
+.nodes-icon::after { transform: rotate(-29deg); }
+
+.motion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.motion-icon i {
+  width: 5px;
+  border-radius: 5px;
+  background: var(--cyan);
+}
+
+.motion-icon i:nth-child(1) { height: 14px; opacity: 0.45; }
+.motion-icon i:nth-child(2) { height: 31px; }
+.motion-icon i:nth-child(3) { height: 21px; opacity: 0.7; }
+
+.brain-icon i {
+  position: absolute;
+  border: 1px solid var(--cyan);
+  border-radius: 50%;
+}
+
+.brain-icon i:nth-child(1) { inset: 10px; }
+.brain-icon i:nth-child(2) { inset: 18px; }
+.brain-icon i:nth-child(3) { inset: 26px; background: var(--cyan); }
+
+.word-icon {
+  display: grid;
+  place-items: center;
+  color: var(--acid);
+  font: 500 20px "DM Mono", monospace;
+}
+
+.flow-step h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.flow-step p {
+  margin: 0;
+  color: #838d87;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.flow-step small {
+  position: absolute;
+  bottom: 18px;
+  left: 21px;
+  color: var(--acid);
+  font: 8px "DM Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+.flow-arrow {
+  display: grid;
+  place-items: center;
+  width: clamp(20px, 2.5vw, 38px);
+  color: #59615c;
+  font: 18px "DM Mono", monospace;
+}
+
+.flow-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(11px, 2vw, 28px);
+  min-height: 72px;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  color: #858e89;
+  font: 9px "DM Mono", monospace;
+  letter-spacing: 0.1em;
+}
+
+.flow-summary i {
+  width: 28px;
+  height: 1px;
+  background: #3c443f;
+}
+
+.flow-summary strong {
+  color: var(--acid);
+  font-weight: 500;
+}
+
+@media (max-width: 1100px) {
+  .simple-flow {
+    grid-template-columns: 1fr;
+  }
+  .flow-step { min-height: 210px; }
+  .flow-arrow { width: 100%; height: 30px; transform: rotate(90deg); }
+}
+
+@media (max-width: 650px) {
+  .flow-intro { align-items: flex-start; flex-direction: column; }
+  .flow-summary { align-items: flex-start; flex-direction: column; }
+  .flow-summary i { width: 1px; height: 15px; margin-left: 5px; }
+}
