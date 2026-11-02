@@ -1,0 +1,335 @@
+REAL-TIME INDIAN SIGN LANGUAGE COMMUNICATION ASSISTANT
+Team preparation notes for the final presentation and viva
+
+Use cmd.txt for commands. presentation.md contains the same study material
+with formatted tables and links.
+
+1. A SHORT OPENING
+
+Our project recognizes one isolated Indian Sign Language sign at a time from
+an uploaded video or a manually captured webcam sequence. Google MediaPipe
+extracts hand and upper-body landmarks. We process those landmarks and use a
+trained classifier to predict a sign label. We compared SVM, LSTM, and a
+Compact Transformer; GRU was an additional temporal comparison. The Compact
+Transformer performed best on our recorded INCLUDE benchmark.
+
+This is a fixed-vocabulary isolated-sign recognition prototype. The displayed
+word is a class label, not a complete grammatical translation of a conversation.
+
+2. FIVE-MINUTE PRESENTATION AND TEAM ORDER
+
+0:00-0:45 - Keyur Sherke: problem, objective, and scope.
+0:45-1:45 - Divya Lonare: dataset, MediaPipe, preprocessing, and system flow.
+1:45-3:00 - Lucky Dhepe: models, comparison, metrics, and results.
+3:00-4:30 - Alkesh Soni: frontend/API demo and observed limitations.
+4:30-5:00 - Keyur Sherke: conclusion and future scope.
+
+This is a suggested speaking order, not a claim about individual development
+contributions. Every member should understand the full flow and result caveat.
+
+3. IMPORTANT FULL FORMS
+
+ISL: Indian Sign Language.
+ML: Machine Learning. DL: Deep Learning.
+SVM: Support Vector Machine.
+RBF: Radial Basis Function, the SVM kernel used here.
+RNN: Recurrent Neural Network, the family containing GRU and LSTM.
+GRU: Gated Recurrent Unit.
+LSTM: Long Short-Term Memory.
+Transformer: an architecture name, not an acronym; we use a compact encoder.
+CNN: Convolutional Neural Network; no separate RGB CNN classifier was
+benchmarked in these reported experiments.
+MLP: Multilayer Perceptron, a general term for feed-forward neural layers.
+CPU: Central Processing Unit. GPU: Graphics Processing Unit.
+CUDA: Compute Unified Device Architecture, NVIDIA's GPU computing platform.
+API: Application Programming Interface.
+HTTP: Hypertext Transfer Protocol.
+JSON: JavaScript Object Notation, used for API responses and reports.
+FPS: Frames Per Second.
+TP/FP/FN/TN: True Positive / False Positive / False Negative / True Negative.
+F1: name of the harmonic-mean metric, not a model or an acronym.
+.npz: NumPy archive holding landmark arrays and metadata.
+.pt: conventional PyTorch checkpoint extension, storing weights/supporting data.
+
+MediaPipe is Google's perception toolkit. FastAPI and React are framework
+names. PyTorch is our neural framework; scikit-learn supplies the SVM pipeline.
+
+4. DATASET AND ACTUAL BENCHMARK SCOPE
+
+INCLUDE is the video dataset obtained from AI4Bharat's published resources.
+Our manifests list 4,292 videos across 263 official classes. The local benchmark
+excludes eight unavailable videos from the Second (Number) class, leaving
+4,284 usable videos across 262 classes. Say "the locally available INCLUDE
+benchmark" when describing the larger experiment.
+
+Dataset             Train    Validation    Test    Total    Classes
+INCLUDE-50            689             77     192      958         50
+Local full INCLUDE  3,121            347     816    4,284        262
+
+INCLUDE-50 was the pilot before scaling to the larger class set. Kaggle and
+ISLVT downloads were explored during collection, but were not included in
+these reported training/test results. Do not add their sample counts to this
+benchmark or describe them as training data for it.
+
+5. SYSTEM FLOW IN SIMPLE LANGUAGE
+
+OFFLINE TRAINING
+INCLUDE videos + official train/validation/test manifests
+ -> Google MediaPipe detects hands and upper-body points
+ -> Sample up to 64 frames and pad shorter sequences
+ -> Center coordinates on shoulders and scale by shoulder width
+ -> Save .npz landmarks, masks, confidence, labels, splits, and timestamps
+ -> Validate files and audit manifest/class coverage
+ -> Train SVM / GRU / LSTM / Compact Transformer
+ -> Select using validation Macro F1
+ -> Refit the chosen configuration on train + validation
+ -> Evaluate on held-out test data and save model/report artifacts
+
+APPLICATION: UPLOADED VIDEO
+React upload -> FastAPI -> backend MediaPipe extraction
+ -> matching preprocessing -> loaded Transformer -> probabilities
+ -> acceptance checks -> sign label or unknown -> React result
+
+APPLICATION: BROWSER WEBCAM
+React camera -> browser MediaPipe + visible connected points
+ -> capture one complete gesture -> send landmark sequence to FastAPI
+ -> sampling + normalization -> loaded Transformer
+ -> quality/confidence checks -> sign label or unknown -> React result
+
+Browser live points show landmark detection. The Python model makes the sign
+classification. The webcam branch sends points directly instead of requiring
+OpenCV to decode a browser recording. Desktop webcam capture is also available.
+
+6. WHAT THE MODEL RECEIVES
+
+Each sampled frame has 51 landmarks: 21 left-hand points, 21 right-hand points,
+and nine selected upper-body pose points. Face landmarks are not included in
+the trained schema.
+
+Each temporal frame has 255 values: 153 coordinates (51 x 3), 51 confidence
+values, and 51 detection indicators. Neural input is up to 64 x 255 values per
+video. Sixty-four is sequence length, not the class count or camera FPS.
+
+Shoulder-based normalization reduces position/scale differences; it does not
+guarantee invariance to new users, angles, signing styles, or occlusion. Short
+clips are padded; true lengths and attention masks keep models from treating
+padding as real movement. Statistical standardization is fit on training data
+during selection, then on train + validation for final refit.
+
+7. HOW THE MODELS WORK
+
+SVM - SUPPORT VECTOR MACHINE
+
+The SVM summarizes each gesture into 1,377 features: coordinate means,
+variation, minimum/maximum, starting/ending positions, movement differences,
+confidence, and detection rates. A StandardScaler and RBF SVM learn boundaries
+between classes. Validation selected C = 10 from 0.1, 1, and 10.
+
+Flow: sequence -> summary vector -> scale -> RBF decision scores -> class.
+It is a useful classical baseline, but summarization loses detailed movement
+order. This scikit-learn trainer runs on CPU, not through PyTorch CUDA.
+
+GRU - GATED RECURRENT UNIT
+
+The GRU reads frames in order and updates hidden memory using reset and update
+gates. Our implementation classifies the final hidden state, with hidden size
+128 and dropout before the output layer. GRU was an additional INCLUDE-50
+validation comparison, not a fourth locked full-INCLUDE test result.
+
+Flow: ordered frames -> gated hidden-state updates -> final state -> class.
+
+LSTM - LONG SHORT-TERM MEMORY
+
+The LSTM reads the sequence in order. Input, forget, and output gates control
+a cell state and hidden state, helping retain useful earlier information.
+Our single-layer LSTM has hidden size 128; classification uses its final
+hidden state with dropout. The full benchmark selected epoch 80 with a
+140-epoch cap and patience 20, then refitted for the selected epoch count.
+
+Flow: ordered frames -> cell/hidden memory and gates -> final hidden state -> class.
+
+COMPACT TRANSFORMER
+
+The model projects each 255-value frame to 128 dimensions, adds learned frame
+positions and a classification token, and passes the sequence through two
+encoder layers. Four attention heads compare relationships across frames.
+The feed-forward dimension is 256 and dropout is 0.3. The output layer maps
+the classification token to sign scores; softmax produces ranked probabilities.
+
+Flow: frames -> 128-dimensional embeddings + positions + class token
+ -> masked self-attention encoders -> class-token representation -> sign scores.
+
+It is an encoder classifier trained on landmarks, not a next-word language
+model. It does not download knowledge of sign meanings from ChatGPT. It learns
+associations between labeled motion patterns and classes.
+
+Attention can relate a sign's start, middle, and end and both hands' motion.
+Landmarks reduce the need to learn visual appearance from pixels. These are
+plausible explanations for observed performance, not proven causes without
+ablation experiments. A larger tested Transformer reached 88.67% validation
+Macro F1, below the selected compact configuration.
+
+8. TRAINING TERMS
+
+Epoch: one pass through training samples, not one frame or one class.
+Batch: group processed before one optimizer update; default size is 32.
+Seed: controls initialization, shuffling, and dropout. Seeds 7, 21, and 42 are
+experiment settings, not class IDs. CUDA results can still vary.
+Learning rate: update step size; compact default is 0.001 with AdamW.
+Loss: training error objective; neural trainers use class-weighted cross-entropy.
+Dropout: randomly disables activations in training to reduce overfitting;
+disabled during inference.
+Early stopping/patience: stop after enough epochs without improved validation
+Macro F1; restore the best checkpoint rather than simply the last epoch.
+Overfitting: learning training-specific patterns that fail to generalize.
+Checkpoint: saved parameters and architecture/preprocessing/label metadata.
+Training vs inference: training updates parameters; inference uses the saved
+model without training again.
+Validation vs test: validation selects configurations; test measures the locked
+configuration. Our scripts refit on train + validation before final test.
+
+9. METRICS WITH ONE WORKED EXAMPLE
+
+For one class, treat hat as positive and every other sign as negative.
+Imagine 20 attempts with this confusion matrix:
+
+Actual / predicted     Hat         Another sign
+Hat                    8 (TP)     4 (FN)
+Another sign           2 (FP)     6 (TN)
+
+Accuracy = correct / all = (8 + 6) / 20 = 70%.
+Question: how often was any label correct?
+
+Precision for hat = TP / (TP + FP) = 8 / 10 = 80%.
+Question: when we said hat, how often were we right?
+
+Recall for hat = TP / (TP + FN) = 8 / 12 = 66.67%.
+Question: how many real hat signs did we find?
+
+F1 for hat = 2PR / (P + R) = 72.73%, balancing precision and recall.
+Support = actual examples of a class; hat has support 12 in this example.
+
+Macro F1 computes F1 per class and gives every class equal weight. F1 values
+0.90, 0.60, and 0.30 average to Macro F1 = 0.60. Weighted F1 weights by class
+support, giving frequent classes more influence. Confusion-matrix rows are
+actual labels; columns are predictions. Diagonal cells are correct and other
+cells identify confused signs.
+
+Definitions are identical for SVM, GRU, LSTM, and Transformer. Accuracy and
+Macro F1 can disagree because class counts and error distributions differ.
+Confidence is a probability for one prediction, not measured dataset accuracy.
+100% displayed probability does not establish correctness, calibration, or
+universal recognition. Landmark coverage is a tracking-quality measure, not
+classification accuracy. Latency is processing time; measure it on the demo
+machine with warm-up and input branch identified.
+
+10. RESULTS TO PRESENT
+
+LOCKED FULL LOCAL INCLUDE RESULTS
+
+Model                 Val accuracy   Val Macro F1   Test accuracy   Test Macro F1
+RBF SVM                     50.43%         43.20%          53.92%          51.05%
+LSTM                        68.01%         62.48%          64.83%          64.01%
+Compact Transformer         92.80%         91.65%          94.36%          94.47%
+
+Correct test videos: SVM 440/816; LSTM 529/816; Transformer 770/816.
+Selected Transformer: seed 42, selected epoch 62. It made 46 test errors.
+Its Macro F1 improvement over LSTM was 30.46 percentage points. These are
+recorded experiment values, not results recomputed by the frontend panel.
+
+INCLUDE-50 PILOT RESULTS
+
+Model                 Val Macro F1   Test accuracy   Test Macro F1
+SVM                         70.28%          67.19%          63.94%
+GRU                         75.87%      Not tested      Not tested
+LSTM                        76.74%          71.35%          63.16%
+Compact Transformer         97.60%          97.92%          97.83%
+
+GRU was not independently tested on the test split. Do not mix INCLUDE-50
+validation scores with 262-class test scores. The pilot Transformer classified
+188/192 test videos correctly. Extra seeds checked initialization sensitivity,
+not individual classes called happy or hot.
+
+11. WHAT THE LIVE DEMO PROVES AND WHAT REMAINS LIMITED
+
+The React interface, FastAPI connection, landmark display, clip prediction,
+and manual webcam capture are implemented. The checkpoint is loaded once and
+reused; prediction does not run training epochs. The first request includes
+loading overhead, so rehearse and warm up before presenting.
+
+Dataset results do not establish signer-independent accuracy or reliable
+continuous conversation. New webcam users have produced unknown or wrong
+predictions. Possible causes include unseen signing style, camera/view
+changes, incomplete gesture boundaries, missing landmarks, and differences
+between training and live detection. These need controlled experiments rather
+than claiming that a single cause has been proved.
+
+Browser/desktop capture checks sequence length, hand visibility, normalization
+coverage, top probability, and top-two probability margin. Uploaded-video
+acceptance is separate and uses different coverage criteria. Unknown is a
+rejection decision, not a trained universal unknown-sign class. Accepted
+predictions can still be wrong.
+
+Smoothing and duplicate-suppression helpers exist, but the current desktop
+demo classifies manually bounded isolated captures. It does not automatically
+segment a continuous conversation.
+
+12. DEMONSTRATION AND CLOSING WORDING
+
+1. Start API and frontend using cmd.txt; check checkpoint and CUDA.
+2. Identify the result panel as stored dataset benchmark results.
+3. Upload an identified INCLUDE test clip; show label, probabilities,
+   coverage, and request latency. Say that it is a dataset clip.
+4. Show live points and capture a rehearsed isolated gesture. Discuss its
+   actual result and any rejection reason honestly.
+5. Close with results and next scope; do not retrain on stage.
+
+Conclusion to speak:
+"We built an end-to-end prototype for isolated ISL sign recognition. On our
+262-class local INCLUDE benchmark, the Compact Transformer achieved 94.36%
+test accuracy and 94.47% Macro F1, outperforming the SVM and LSTM baselines.
+Our next priority is reliable recognition for new webcam users through diverse
+recordings, consistent capture, and independent evaluation."
+
+Future scope: collect consented multi-user webcam clips, align preprocessing,
+evaluate by signer/environment, calibrate rejection on development data,
+measure end-to-end latency, and study continuous segmentation. RGB/CNN or
+hybrid features could be evaluated if landmarks miss necessary cues.
+
+13. SHORT VIVA ANSWERS
+
+Why not just one image? Movement and order distinguish many signs.
+Why MediaPipe? Compact hand/pose representations and visible tracking.
+Why not a huge Transformer? The compact version did better in our experiments;
+larger capacity does not guarantee better generalization with limited samples.
+Do models vote together? No. They were compared offline; the deployed demo
+uses one selected Compact Transformer checkpoint.
+Is there a decoder? No, this is a Transformer encoder classifier.
+Why CUDA? It enables PyTorch neural computations on an NVIDIA GPU. CPU-only
+PyTorch cannot use CUDA. The SVM trainer does not require it.
+Can it replace an interpreter? No. Scope is isolated vocabulary and new-user
+reliability remains incomplete.
+Why dataset success but webcam failures? Complete capture and generalization
+across users/recording environments both matter.
+Is live accuracy included in 94.36%? No; these evaluations are separate and
+no numerical live-user accuracy is established here.
+Does a combined neural run test every architecture? No. With --evaluate-test,
+the current trainer tests only the validation winner. Independent commands
+for each model are in cmd.txt.
+
+14. EVIDENCE IN THE REPOSITORY
+
+documents/stage 6/03-full-include-model-benchmark.md
+documents/stage 6/01-include50-model-benchmark.md
+documents/stage 6/02-model-workflows-and-training-terminology.md
+src/isl_assistant/models/temporal.py
+scripts/train_svm_baseline.py
+scripts/train_temporal_baselines.py
+src/isl_assistant/inference/temporal_predictor.py
+src/isl_assistant/api/
+frontend/README.md
+frontend/vite.config.js
+
+The saved JSON experiment reports and confusion matrices under the configured
+external feature root are the experiment artifacts. Do not quote a current
+test-suite count or universal latency without measuring it for that run.

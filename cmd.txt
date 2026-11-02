@@ -1,0 +1,197 @@
+# REAL-TIME INDIAN SIGN LANGUAGE COMMUNICATION ASSISTANT
+# Windows PowerShell command reference. Copy ONLY the section you need.
+# This file is documentation; do not execute the entire file as a script.
+# Long commands are intentionally on one line to avoid backtick copy errors.
+# Installation, extraction, training and webcam commands are for you to run.
+
+# 0. START HERE: run from the repository root in every new terminal.
+Set-Location "D:\Django_Python_Practice\Real-Time-Indian-Sign-Language-Communication-Assistant"
+$FeatureRoot = "E:\Hugging_Face\INCLUDE\processed\mediapipe_v1"
+$Checkpoint = "$FeatureRoot\models\full_include\transformer_final_seed_42\selected_final.pt"
+$Config = "configs/landmarks_include.toml"
+
+# Main benchmark: configs/landmarks_include.toml = 262 local classes / 4,284 videos.
+# INCLUDE-50: use configs/landmarks.toml instead; it has the matching label map.
+# Do not switch only --subset: the configuration must also match the label map.
+# Change local drive paths above and inside configs if using another computer.
+# Commands use the project environment managed by uv. Activation is unnecessary.
+# If deliberately using an activated custom environment, use uv run --active.
+
+# 1. MAIN API RUN (Terminal 1; complete section 0 first)
+Test-Path -LiteralPath $Checkpoint
+uv run python scripts/run_api.py --checkpoint "$Checkpoint" --device cuda --host 127.0.0.1 --port 8000
+# Leave this terminal running. Ctrl+C stops the server.
+# CPU fallback: replace --device cuda with --device cpu (or auto).
+# API docs: http://127.0.0.1:8000/docs
+# The predictor loads lazily on the first inference request. A running server
+# or ready=true alone does not prove that the checkpoint and CUDA can load.
+
+# 2. FRONTEND (Terminal 2; separate from the running API)
+Set-Location "D:\Django_Python_Practice\Real-Time-Indian-Sign-Language-Communication-Assistant\frontend"
+npm run dev -- --port 5173 --strictPort
+# Open http://127.0.0.1:5173 and allow camera permission for webcam use.
+# Vite forwards /api requests to 127.0.0.1:8000 via frontend/vite.config.js.
+# Ctrl+C stops the frontend. Return to the repo root before Python commands:
+Set-Location ..
+
+# 3. API CHECKS (Terminal 3; repo root; API must already be running)
+Invoke-RestMethod "http://127.0.0.1:8000/api/health" | ConvertTo-Json -Depth 6
+Invoke-RestMethod "http://127.0.0.1:8000/api/benchmark" | ConvertTo-Json -Depth 6
+Invoke-RestMethod "http://127.0.0.1:8000/api/reference/signs" | ConvertTo-Json -Depth 6
+# /api/benchmark returns stored presentation numbers; it does NOT evaluate a model.
+# Reference routes also require the dataset/manifests configured on this machine.
+
+# Upload an existing isolated-sign video. Replace this path if needed.
+$Video = "E:\Hugging_Face\INCLUDE\raw\include\Clothes\37. Hat\MVI_3688.MOV"
+curl.exe -X POST "http://127.0.0.1:8000/api/predict/video" -F "video=@$Video"
+# Multipart field must be named video. Use curl.exe, not PowerShell's curl alias.
+# Browser webcam sequences use POST /api/predict/landmarks instead.
+
+# 4. ONE-TIME INSTALLATION / DEVICE DIAGNOSTICS (only when needed)
+# Run from the repository root; dependency downloads may take time.
+uv sync --group dev
+powershell -ExecutionPolicy Bypass -File scripts/download_mediapipe_models.ps1
+Push-Location frontend
+npm install
+Pop-Location
+# pyproject.toml currently selects PyTorch's cu130 wheel index.
+# Do not manually replace it with an unrelated CPU-only torch installation.
+uv run python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA build:', torch.version.cuda); print('CUDA available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU only')"
+nvidia-smi
+# NVIDIA graphics appearing in Task Manager does not prove CUDA is available.
+
+# 5. TRAIN ALL THREE MAIN MODELS IN ONE SEQUENTIAL BATCH
+# Run section 0 first. This launches SVM, then LSTM, then Transformer.
+# This is sequential, not three simultaneous GPU jobs and not an ensemble.
+# The API demonstration uses an existing checkpoint; retraining is NOT needed
+# before presenting. Stop GPU-heavy work before timing live inference.
+# Each run gets a new output folder to protect the recorded benchmark artifacts.
+$RunRoot = "$FeatureRoot\models\presentation_runs\$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')"
+$EvaluateTest = $false
+# Default: validation only. For an explicitly planned final test run, change the
+# value above to $true. Existing published test results are already frozen.
+# --evaluate-test retrains/refits and evaluates; it does NOT merely load a .pt.
+$TestArgs = @()
+if ($EvaluateTest) { $TestArgs = @("--evaluate-test") }
+
+uv run python scripts/train_svm_baseline.py --config "$Config" --output "$RunRoot\svm" @TestArgs
+if ($LASTEXITCODE -ne 0) { throw "SVM failed; batch stopped." }
+
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models lstm --epochs 140 --patience 20 --seed 42 --device cuda --output "$RunRoot\lstm_seed_42" @TestArgs
+if ($LASTEXITCODE -ne 0) { throw "LSTM failed; batch stopped." }
+
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models transformer --epochs 80 --patience 12 --seed 42 --device cuda --output "$RunRoot\transformer_seed_42" @TestArgs
+if ($LASTEXITCODE -ne 0) { throw "Transformer failed; batch stopped." }
+
+Write-Output "All three completed. Reports: $RunRoot"
+# LSTM uses the documented 140-epoch cap and patience 20. Transformer uses
+# hidden size 128, 4 heads, 2 layers, feed-forward size 256, dropout 0.3.
+# A new run may not reproduce every decimal, even with seed 42 on CUDA.
+
+# 6. TRAIN EACH MODEL SEPARATELY (choose only the desired command)
+# Run section 0 first. Use a fresh experiment folder for each new run.
+$SeparateRoot = "$FeatureRoot\models\separate_runs\$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')"
+
+# SVM: Support Vector Machine; CPU-based scikit-learn trainer.
+uv run python scripts/train_svm_baseline.py --config "$Config" --output "$SeparateRoot\svm"
+
+# LSTM: Long Short-Term Memory; sequence model.
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models lstm --epochs 140 --patience 20 --seed 42 --device cuda --output "$SeparateRoot\lstm_seed_42"
+
+# Compact Transformer: temporal attention model.
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models transformer --epochs 80 --patience 12 --seed 42 --device cuda --output "$SeparateRoot\transformer_seed_42"
+
+# GRU: Gated Recurrent Unit; optional additional temporal comparison.
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models gru --epochs 80 --patience 12 --seed 42 --device cuda --output "$SeparateRoot\gru_seed_42"
+
+# To intentionally refit and test any one model, append --evaluate-test to its
+# command. Never use test scores to repeatedly choose configurations or seeds.
+# SVM does not accept --device or --seed. Neural trainers accept both.
+
+# 7. COMPARE GRU + LSTM + TRANSFORMER IN ONE TRAINER INVOCATION
+# Run section 0 first. SVM has its own trainer and cannot go in --models.
+uv run python scripts/train_temporal_baselines.py --config "$Config" --models gru lstm transformer --epochs 140 --patience 20 --seed 42 --device cuda --output "$FeatureRoot\models\temporal_comparison_$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')"
+# Models train one after another and receive the SAME supplied settings here.
+# Output: one combined report and a validation checkpoint for each architecture.
+# Appending --evaluate-test tests ONLY the validation-selected architecture.
+# Use section 5 if you need independent final test reports for all three models.
+
+# 8. INCLUDE-50 EXPERIMENTS (choose this configuration intentionally)
+$Config = "configs/landmarks.toml"
+# Now use section 5, 6, or 7 with a NEW output directory.
+# To restore the larger local benchmark afterward:
+$Config = "configs/landmarks_include.toml"
+# INCLUDE-50 and full INCLUDE share the configured feature root but use their
+# own manifest-selected sample identities, split metadata, and label maps.
+
+# 9. INSPECT EXISTING RESULTS WITHOUT TRAINING
+# These are the locked full-INCLUDE experiment paths used by the project.
+Get-Content "$FeatureRoot\models\full_include\svm_final\svm_baseline_report.json" -Raw
+Get-Content "$FeatureRoot\models\full_include\lstm_final_seed_42\temporal_baseline_report.json" -Raw
+Get-Content "$FeatureRoot\models\full_include\transformer_final_seed_42\transformer_baseline_report.json" -Raw
+Import-Csv "$FeatureRoot\models\full_include\transformer_final_seed_42\test_confusion_matrix.csv" | Select-Object -First 5
+# Reports contain validation/test accuracy, Macro F1, and per-class results.
+# Without --evaluate-test, report.test is null and selected_final.pt is absent.
+# Temporal trainer's terminal summary prints validation only; read JSON for test.
+# Validation checkpoint: <architecture>_validation_best.pt
+# Final neural checkpoint after --evaluate-test: selected_final.pt
+# SVM checkpoint: svm_baseline.joblib
+
+# 10. SINGLE-VIDEO PREDICTION WITH A SAVED TEMPORAL MODEL
+# Run section 0 and set $Video as in section 3.
+uv run python scripts/predict_landmark_video.py --video "$Video" --checkpoint "$Checkpoint" --device cuda --top-k 5
+# This works with GRU/LSTM/Transformer checkpoints in the supported schema.
+# Change --checkpoint to the desired temporal .pt file for each model.
+# It does not support svm_baseline.joblib. No SVM single-video CLI is implemented.
+# This CLI prints rankings; API/webcam also apply acceptance/rejection checks.
+
+# 11. DESKTOP WEBCAM PREDICTION + EVALUATION LOG
+uv run python scripts/run_webcam_inference.py --checkpoint "$Checkpoint" --device cuda --camera 0 --log "output/live/presentation_trials.jsonl" --expected-label hat --trial-id presentation-hat-01
+# Space = start/stop one complete isolated gesture. R = discard. C = clear.
+# Q or Esc = quit. Use --camera 1 if the intended camera has a different index.
+# --expected-label is the intended label for logging, NOT a forced prediction.
+# Omit --expected-label / --trial-id for an unprompted exploration.
+# Use even lighting; keep hands and shoulders visible; start before the sign.
+
+# 12. LANDMARK VISUALIZATION WITHOUT THE SIGN CLASSIFIER
+uv run python scripts/visualize_mediapipe_video.py --video "$Video"
+# Optional annotated output (can take time):
+uv run python scripts/visualize_mediapipe_video.py --video "$Video" --output "output/hat_landmarks.mp4" --no-preview
+
+# 13. DATA VALIDATION / QUALITY REPORTS
+uv run python scripts/validate_landmark_folder.py --input "$FeatureRoot" --sequence-length 64
+uv run python scripts/report_landmark_dataset_quality.py --config configs/landmarks_include.toml --report-name full_include_dataset_quality_report.json
+# INCLUDE-50 audit instead:
+uv run python scripts/report_landmark_dataset_quality.py --config configs/landmarks.toml --report-name include50_dataset_quality_report.json
+# Folder validation checks archives; the quality report checks manifest coverage
+# and per-class / split coverage. Valid archives alone do not prove live accuracy.
+
+# 14. EXTRACTION / RESUME (not required for an already extracted dataset)
+# Plan only: counts selected files without running MediaPipe extraction.
+uv run python scripts/extract_landmark_folder.py --config configs/landmarks_include.toml --plan-only
+# Extract missing/invalid archives; validated completed outputs are skipped.
+uv run python scripts/extract_landmark_folder.py --config configs/landmarks_include.toml --report-name full_include_extraction_report.json
+# Do not add --overwrite unless you intentionally want to regenerate outputs.
+
+# 15. TESTS / FRONTEND BUILD (run yourself; no training needed)
+uv run pytest -q
+uv run ruff check src scripts tests
+Push-Location frontend
+npm run build
+Pop-Location
+
+# 16. PORT TROUBLESHOOTING
+Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess
+# Inspect the listed process ID; stop your previous server with Ctrl+C in its
+# terminal. Another project may own port 8000. Do not kill an unknown process.
+# An alternate API port is possible via --port, but update the Vite /api proxy
+# to the same port before starting the frontend. Keep 8000/5173 for the demo.
+
+# 17. PRESENTATION STARTUP ORDER
+# (1) Section 0 and device/checkpoint checks.
+# (2) Section 1 API in Terminal 1.
+# (3) Section 2 React in Terminal 2.
+# (4) Warm up with one prediction using an identified INCLUDE test clip.
+# (5) Show live points, then capture one isolated gesture if rehearsed.
+# (6) State dataset benchmark results and live-user limitations separately.
+# (7) Do NOT train or re-extract during the presentation.
