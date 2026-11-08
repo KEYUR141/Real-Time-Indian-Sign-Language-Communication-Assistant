@@ -1,14 +1,11 @@
 <h1 align="center">Real-Time Indian Sign Language<br>Communication Assistant</h1>
 
 <p align="center">
-  A final-year project submitted in partial fulfillment of the requirements for the degree of<br>
+  A university final-year project<br>
   <strong>Bachelor of Technology in Computer Science and Engineering</strong>
 </p>
 
 <p align="center">
-  School of Engineering and Technology<br>
-  <strong>G H Raisoni University, Saikheda</strong><br>
-  Under the supervision of <strong>Dr. Rahul Khokale</strong>, Supervisor and Dean, SOET<br>
   November 2026
 </p>
 
@@ -171,8 +168,6 @@ for configurations, evaluation protocol, and limitations.
   </tr>
 </table>
 
-**Supervisor:** Dr. Rahul Khokale, Dean, School of Engineering and Technology.
-
 **Implementation and repository maintainer:** [Keyur Sherke](https://github.com/KEYUR141).
 
 ## Application outputs
@@ -214,12 +209,11 @@ vocabulary, and training/validation/test split used by the local benchmark.
 ## Project showcase
 
 <p align="center">
-  <img src="documents/assets/readme/showcase/chancellor-project-showcase.jpeg" width="800" alt="Keyur Sherke and Divya Lonare presenting the ISL assistant to Chancellor Shri Sunil Raisoni at the GHRUTBIF inauguration.">
+  <img src="documents/assets/readme/showcase/chancellor-project-showcase.jpeg" width="800" alt="Keyur Sherke and Divya Lonare presenting the ISL assistant to the university Chancellor at an incubation centre inauguration.">
 </p>
 
-**Keyur Sherke and Divya Lonare presenting the project to Chancellor
-Shri Sunil Raisoni** during the inauguration of the **GHRU Technology Business
-Incubator Foundation (GHRUTBIF)** at G H Raisoni University, Saikheda.
+**Keyur Sherke and Divya Lonare presenting the project to the university
+Chancellor** during the inauguration of the university's incubation centre.
 This photograph is also included in the project report appendix.
 
 ## Run the project
@@ -321,3 +315,10 @@ The project uses the **AI4Bharat INCLUDE dataset**, **Google MediaPipe**,
 **Vite**. Dataset ownership and third-party software licenses remain with their
 respective providers. Research references and experiment details are recorded
 in the documentation linked above.
+
+## License
+
+The original project code is licensed under the [MIT License](LICENSE).
+Third-party datasets, pretrained model assets, software dependencies, and
+photographs are not relicensed by this notice; their respective licenses
+and permissions apply.
